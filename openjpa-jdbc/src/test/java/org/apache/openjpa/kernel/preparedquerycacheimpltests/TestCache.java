@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package PreparedQueryCacheImplTests;
+package org.apache.openjpa.kernel.preparedquerycacheimpltests;
 
 import org.apache.openjpa.jdbc.kernel.PreparedQueryCacheImpl;
 import org.apache.openjpa.jdbc.kernel.PreparedQueryImpl;
