@@ -24,34 +24,68 @@ import org.apache.openjpa.jdbc.conf.JDBCConfiguration;
 import org.apache.openjpa.jdbc.kernel.NativeJDBCSeq;
 import org.apache.openjpa.jdbc.sql.DBDictionary;
 import org.apache.openjpa.lib.log.Log;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.sql.SQLException;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
-public class ITRefreshSequence {
+public class ITRefreshDropSequence {
 
-    @Test
-    public void testRefreshSequence() throws SQLException {
+    private JDBCConfiguration mockConf;
+    private Log mockedLog;
+    private DBDictionary mockedDict;
+    private NativeJDBCSeq nativeJDBCSeq;
 
-        NativeJDBCSeq nativeJDBCSeq = new NativeJDBCSeq();
-
-        JDBCConfiguration mockConf = mock(JDBCConfiguration.class);
-        Log mockedLog = mock(Log.class);
-        DBDictionary mockedDict = mock(DBDictionary.class);
+    @Before
+    public void setUp(){
+        mockConf = mock(JDBCConfiguration.class);
+        mockedLog = mock(Log.class);
+        mockedDict = mock(DBDictionary.class);
 
         when(mockConf.getLog(OpenJPAConfiguration.LOG_RUNTIME)).thenReturn(mockedLog);
         when(mockedLog.isInfoEnabled()).thenReturn(true);
         when(mockConf.getDataSource2(null)).thenReturn(null);
         when(mockConf.getLog(JDBCConfiguration.LOG_SCHEMA)).thenReturn(mockedLog);
         when(mockedDict.getCreateSequenceSQL(any())).thenReturn(new String[0]);
+        when(mockedDict.getDropSequenceSQL(any())).thenReturn(new String[0]);
         when(mockConf.getDBDictionaryInstance()).thenReturn(mockedDict);
 
+        nativeJDBCSeq = new NativeJDBCSeq();
         nativeJDBCSeq.setConfiguration(mockConf);
+    }
+
+
+    @Test
+    public void testRefreshSequence() throws SQLException {
+
         nativeJDBCSeq.refreshSequence();
+
+        verifyMocks();
+        verify(mockedDict).getCreateSequenceSQL(any());
+    }
+
+    @Test
+    public void testDropSequence() throws SQLException {
+
+        nativeJDBCSeq.dropSequence();
+
+        verifyMocks();
+        verify(mockedDict).getDropSequenceSQL(any());
+
+    }
+
+    private void verifyMocks(){
+        verify(mockConf).getLog(OpenJPAConfiguration.LOG_RUNTIME);
+        verify(mockConf).getDataSource2(null);
+        verify(mockConf).getLog(JDBCConfiguration.LOG_SCHEMA);
+        verify(mockConf).getDBDictionaryInstance();
+
+        verify(mockedLog).isInfoEnabled();
     }
 
 }

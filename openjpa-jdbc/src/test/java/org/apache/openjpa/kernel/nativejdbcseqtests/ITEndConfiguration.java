@@ -30,8 +30,7 @@ import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 public class ITEndConfiguration {
 
@@ -39,7 +38,6 @@ public class ITEndConfiguration {
     public void testEndConfiguration() {
         NativeJDBCSeq nativeJDBCSeq = new NativeJDBCSeq();
         nativeJDBCSeq.setSequence("testSequence");
-        nativeJDBCSeq.setSchema("testSchema");
 
         JDBCConfiguration mockConf = mock(JDBCConfiguration.class);
         DBDictionary mockDict = mock(DBDictionary.class);
@@ -55,6 +53,16 @@ public class ITEndConfiguration {
 
         nativeJDBCSeq.endConfiguration();
 
+        verify(mockConf).getDBDictionaryInstance();
+
+        verify(mockDict).getFullName(any(Sequence.class));
+
+        mockStaticSchemas.verify(
+                () -> Schemas.getNewTableSchemaIdentifier(mockConf),
+                times(1)
+        );
+
+        mockStaticSchemas.close();
     }
 
 }
