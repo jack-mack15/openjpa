@@ -19,32 +19,27 @@
 
 package org.apache.openjpa.kernel.preparedquerycacheimpltests;
 
-import org.apache.openjpa.conf.OpenJPAConfiguration;
+
+import org.apache.openjpa.jdbc.conf.JDBCConfigurationImpl;
 import org.apache.openjpa.jdbc.kernel.PreparedQueryCacheImpl;
 import org.apache.openjpa.jdbc.kernel.PreparedQueryImpl;
 import org.apache.openjpa.kernel.PreparedQuery;
 import org.apache.openjpa.kernel.PreparedQueryCache;
-import org.apache.openjpa.lib.conf.ConfigurationImpl;
-import org.apache.openjpa.lib.log.Log;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import java.util.Arrays;
 import java.util.Collection;
 
-import static java.lang.System.out;
 import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
 
 @RunWith(value= Parameterized.class)
 public class TestMarkUncachable {
 
-    private Log _log;
     private PreparedQueryCache cache;
     private boolean expected;
     private String id;
@@ -65,21 +60,16 @@ public class TestMarkUncachable {
         //per aumentare coverage
         cache.setEnableStatistics(true);
 
-        //mocks utilizzato per aumentare coverage
-        Log mockedLog = mock(Log.class);
-        when(mockedLog.isTraceEnabled()).thenReturn(true);
+        cache.setConfiguration(new JDBCConfigurationImpl());
 
-        ConfigurationImpl mockedConf = mock(ConfigurationImpl.class);
-        when(mockedConf.getLog(OpenJPAConfiguration.LOG_RUNTIME)).thenReturn(mockedLog);
-
-        cache.setConfiguration(mockedConf);
     }
 
     @Parameters
     public static Collection<Object[]> getParameters(){
         PreparedQueryCache.Exclusion excl = new PreparedQueryCacheImpl.StrongExclusion("pattern","reason");
+
         return Arrays.asList(new Object[][]{
-                //expected  id          eclusion
+                //expected  id          exclusion
                 {true,      "testId",   excl},
                 {true,      "",         excl},
                 {false,     null,       excl},

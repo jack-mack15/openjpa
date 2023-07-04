@@ -32,8 +32,7 @@ import org.junit.runners.Parameterized.Parameters;
 import java.util.Arrays;
 import java.util.Collection;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 @RunWith(value= Parameterized.class)
 public class TestIsCachable {
@@ -46,29 +45,30 @@ public class TestIsCachable {
     public void setUp(){
         cache = new PreparedQueryCacheImpl();
 
-        PreparedQuery query1 = new PreparedQueryImpl("testId",   "testSql",null);
+        PreparedQuery query1 = new PreparedQueryImpl("valid",   "testSql",null);
 
         //per aumentare coverage
-        PreparedQuery query2 = new PreparedQueryImpl("test",   "testSql",null);
-
+        //PreparedQuery query2 = new PreparedQueryImpl("test",   "testSql",null);
+        //cache.cache(query2);
 
         cache.cache(query1);
-        cache.cache(query2);
-        cache.markUncachable("test",null);
 
+        cache.markUncachable("uncachable",null);
+        cache.setExcludes("excluded");
         cache.endConfiguration();
+
     }
 
     @Parameters
     public static Collection<Object[]> getParameters(){
         return Arrays.asList(new Object[][]{
-                //expected  id
-                {true,      "testId"},
-                {false,     ""},
-                {false,     null},
-
-                //per aumentare coverage
-                {false,     "test"}
+                //expected      id
+                {true,          "valid"},
+                {false,         "uncachable"},
+                //questi tre casi di test sollevano eccezione NullPointerException
+                {false,         "excluded"},
+                {false,         "not valid"},
+                {false,         null},
         });
     }
 

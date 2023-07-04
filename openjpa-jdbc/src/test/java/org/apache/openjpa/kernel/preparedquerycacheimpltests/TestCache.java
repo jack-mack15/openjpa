@@ -23,6 +23,7 @@ import org.apache.openjpa.jdbc.kernel.PreparedQueryCacheImpl;
 import org.apache.openjpa.jdbc.kernel.PreparedQueryImpl;
 import org.apache.openjpa.kernel.*;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -33,35 +34,38 @@ import java.util.Collection;
 @RunWith(value= Parameterized.class)
 public class TestCache {
 
-    private String id;
-    private String sql;
+    private PreparedQueryImpl query;
     private boolean firstExpected;
-    private boolean secondExpected;
-    private boolean thirdExpected;
+    private boolean getExpected;
+    private PreparedQueryCacheImpl cache;
+
+    @Before
+    public void setUp(){
+        cache = new PreparedQueryCacheImpl();
+        cache.markUncachable("unCache",null);
+        cache.setExcludes("excluded");
+    }
 
     @Parameters
     public static Collection<Object[]> getParameters(){
+
+        PreparedQueryImpl valid = new PreparedQueryImpl("testId","testSql",null);
+        PreparedQueryImpl uncachable = new PreparedQueryImpl("unCache","testSql",null);
+        PreparedQueryImpl excluded = new PreparedQueryImpl("excluded","testSql",null);
+
         return Arrays.asList(new Object[][]{
-                //first     second      third       id             sql
-                {true,      false,      true,       "testId",      "testSql"},
-                {true,      false,      true,       "testId",      ""},
-                {true,      false,      true,        "testId",      null},
-                {true,      true,       true,       "",            "testSql"},
-                {true,      true,       true,       "",            ""},
-                {true,      true,       true,       "",            null},
-                {true,      true,       false,      null,          "testSql"},
-                {true,      true,       false,      null,          ""},
-                {true,      true,       false,      null,          null}
+                //first     second      query
+                {true,      true,      valid},
+                {false,     false,      uncachable},
+                {false,     false,      excluded},
+                {false,     false,      null}
         });
     }
 
-    public TestCache(boolean firstExpected,boolean secondExpected,boolean thirdExpected,String id,String sql){
-
+    public TestCache(boolean firstExpected, boolean getExpected, PreparedQueryImpl query){
         this.firstExpected = firstExpected;
-        this.secondExpected = secondExpected;
-        this.thirdExpected = thirdExpected;
-        this.id = id;
-        this.sql = sql;
+        this.getExpected = getExpected;
+        this.query = query;
     }
 
     @Test
@@ -69,52 +73,22 @@ public class TestCache {
 
         boolean result;
 
-        PreparedQueryCache cache = new PreparedQueryCacheImpl();
-        PreparedQuery query = new PreparedQueryImpl(id,sql,null);
+        try {
 
-        result = cache.cache(query);
-        Assert.assertEquals(firstExpected,result);
-    }
+            result = cache.cache(query);
+            Assert.assertEquals(firstExpected,result);
 
-    @Test
-    public void testSecondCache(){
+            PreparedQuery getQuery = cache.get(query.getIdentifier());
 
-        boolean result;
-
-        PreparedQueryCache cache = new PreparedQueryCacheImpl();
-        PreparedQuery query = new PreparedQueryImpl("testId",   "testSql",null);
-        cache.cache(query);
-
-        PreparedQuery secondQuery = new PreparedQueryImpl(id,sql,null);
-
-        result = cache.cache(secondQuery);
-        Assert.assertEquals(secondExpected,result);
-
-    }
-
-    @Test
-    public void testGet(){
-
-        PreparedQuery result;
-
-        PreparedQueryCache cache = new PreparedQueryCacheImpl();
-        PreparedQuery query1 = new PreparedQueryImpl("testId",   "testSql",null);
-        PreparedQuery query2 = new PreparedQueryImpl("","testSql",null);
-        PreparedQuery query3 = new PreparedQueryImpl("","",null);
-
-        cache.cache(query1);
-        cache.cache(query2);
-        cache.cache(query3);
-
-        if(thirdExpected){
-            result = cache.get(id);
-            Assert.assertNotNull(result);
+            if(getExpected)
+                Assert.assertNotNull(getQuery);
+            else
+                Assert.assertNull(getQuery);
         }
-        else{
-            result = cache.get(id);
-            Assert.assertNull(result);
+        catch (Exception e){
+            Assert.assertTrue(e instanceof NullPointerException);
+            Assert.assertFalse(firstExpected);
         }
-
-
     }
+
 }

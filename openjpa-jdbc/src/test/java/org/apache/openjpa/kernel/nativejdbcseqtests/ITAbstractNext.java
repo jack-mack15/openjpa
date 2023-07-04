@@ -19,30 +19,57 @@
 
 package org.apache.openjpa.kernel.nativejdbcseqtests;
 
+import org.apache.openjpa.conf.OpenJPAConfiguration;
 import org.apache.openjpa.jdbc.conf.JDBCConfigurationImpl;
 import org.apache.openjpa.jdbc.kernel.NativeJDBCSeq;
-import org.apache.openjpa.jdbc.meta.ClassMapping;
+import org.apache.openjpa.jdbc.sql.DBDictionary;
+import org.apache.openjpa.kernel.DelegatingStoreManager;
 import org.apache.openjpa.kernel.StoreContext;
+import org.apache.openjpa.lib.log.Log;
 import org.apache.openjpa.meta.ClassMetaData;
 import org.junit.Test;
 
-import static org.mockito.Mockito.mock;
+import java.sql.SQLException;
+
+import static org.mockito.Mockito.*;
 
 public class ITAbstractNext {
 
     private NativeJDBCSeq nativeJDBCSeq;
 
     @Test
-    public void test(){
+    public void test() throws SQLException {
         nativeJDBCSeq = new NativeJDBCSeq();
-        JDBCConfigurationImpl conf = new JDBCConfigurationImpl();
-        nativeJDBCSeq.setConfiguration(conf);
+
+        nativeJDBCSeq.setType(2);
+
+        MyJBDBCStoreManagerImpl store = new MyJBDBCStoreManagerImpl();
+        ClassMetaData meta = null;
 
         StoreContext mockedCont = mock(StoreContext.class);
-        ClassMetaData mockedMeta = mock(ClassMetaData.class);
+        DelegatingStoreManager mockedDel = mock(DelegatingStoreManager.class);
+        JDBCConfigurationImpl mockedConf = mock(JDBCConfigurationImpl.class);
+        DBDictionary mockedDict = mock(DBDictionary.class);
+        Log mockedLog = mock(Log.class);
 
-        //StoreContext
+        store.setWhens();
+        when(mockedCont.getStoreManager()).thenReturn(mockedDel);
+        when(mockedDel.getInnermostDelegate()).thenReturn(store);
+        when(mockedConf.getDBDictionaryInstance()).thenReturn(mockedDict);
+        when(mockedConf.getLog(OpenJPAConfiguration.LOG_RUNTIME)).thenReturn(mockedLog);
+        when(mockedLog.isWarnEnabled()).thenReturn(true);
 
-        //nativeJDBCSeq.next(mockedCont,mockedMeta);
+
+        nativeJDBCSeq.setConfiguration(mockedConf);
+
+        nativeJDBCSeq.next(mockedCont,meta);
+
+        verify(mockedCont).getStoreManager();
+        verify(mockedDel).getInnermostDelegate();
+        verify(mockedConf,times(3)).getDBDictionaryInstance();
+        verify(mockedConf).getLog(OpenJPAConfiguration.LOG_RUNTIME);
+        verify(mockedLog).isWarnEnabled();
+        store.verifyMocks();
+
     }
 }
