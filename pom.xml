@@ -108,7 +108,6 @@
 
         <maven-failsafe-plugin.version>3.0.0-M6</maven-failsafe-plugin.version>
 
-
     </properties>
 
     <licenses>

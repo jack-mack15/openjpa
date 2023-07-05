@@ -27,6 +27,7 @@ import org.apache.openjpa.kernel.PreparedQuery;
 import org.apache.openjpa.kernel.PreparedQueryCache;
 
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -35,6 +36,7 @@ import org.junit.runners.Parameterized.Parameters;
 import java.util.Arrays;
 import java.util.Collection;
 
+import static java.lang.System.out;
 import static org.junit.Assert.*;
 
 @RunWith(value= Parameterized.class)
@@ -44,21 +46,20 @@ public class TestMarkUncachable {
     private boolean expected;
     private String id;
     private PreparedQueryCache.Exclusion exclusion;
+    private PreparedQueryImpl queryInCache;
 
     @Before
     public void setUp(){
         cache = new PreparedQueryCacheImpl();
 
-        PreparedQuery query1 = new PreparedQueryImpl("testId",   "testSql",null);
-        PreparedQuery query2 = new PreparedQueryImpl("",   "testSql",null);
+        queryInCache = new PreparedQueryImpl("testId",   "testSql",null);
 
-        cache.cache(query1);
-        cache.cache(query2);
+        cache.cache(queryInCache);
 
         cache.endConfiguration();
 
         //per aumentare coverage
-        cache.setEnableStatistics(true);
+        //cache.setEnableStatistics(true);
 
         cache.setConfiguration(new JDBCConfigurationImpl());
 
@@ -66,19 +67,31 @@ public class TestMarkUncachable {
 
     @Parameters
     public static Collection<Object[]> getParameters(){
-        PreparedQueryCache.Exclusion excl = new PreparedQueryCacheImpl.StrongExclusion("pattern","reason");
+        PreparedQueryCache.Exclusion strongExcl = new PreparedQueryCacheImpl.StrongExclusion("pattern","reason");
+        PreparedQueryCache.Exclusion weakExcl = new PreparedQueryCacheImpl.WeakExclusion("pattern","reason");
+        PreparedQueryCache.Exclusion invalid = new PreparedQueryCacheImpl.WeakExclusion(null,null);
 
         return Arrays.asList(new Object[][]{
-                //expected  id          exclusion
-                {true,      "testId",   excl},
-                {true,      "",         excl},
-                {false,     null,       excl},
-                {true,      "testId",   null},
-                {true,      "",         null},
-                {false,     null,       null},
+                //expected      id              exclusion
+                {true,          "testId",       strongExcl},
+                {false,         "notInCache",   strongExcl},
+                {false,         "",             strongExcl},
+                {false,         null,           strongExcl},
+                {true,          "testId",       weakExcl},
+                {false,         "notInCache",   weakExcl},
+                {false,         "",             weakExcl},
+                {false,         null,           weakExcl},
+                {true,          "testId",       invalid},
+                {false,         "notInCache",   invalid},
+                {false,         "",             invalid},
+                {false,         null,           invalid},
+                {true,          "testId",       null},
+                {false,         "notInCache",   null},
+                {false,         "",             null},
+                {false,         null,           null},
 
                 //per aumentare coverage
-                {false,     "notInCache",     null}
+                //{false,     "notInCache",     null}
         });
     }
 
@@ -89,16 +102,20 @@ public class TestMarkUncachable {
     }
 
     @Test
-    public void testIsCacheable() throws NoSuchFieldException {
+    public void testIsCacheable() {
 
         PreparedQuery result;
 
         result = cache.markUncachable(id,exclusion);
-        if (expected)
-            assertNotNull(result);
-        else
-            assertNull(result);
-
+        if (result != null) {
+            assertEquals(queryInCache, result);
+            Assert.assertTrue(expected);
+            Assert.assertFalse(cache.isCachable(id));
+        }
+        else {
+            Assert.assertFalse(expected);
+            Assert.assertFalse(cache.isCachable(id));
+        }
     }
 
     @After

@@ -32,83 +32,78 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
 
-import static org.junit.Assert.assertFalse;
+import static java.lang.System.out;
 
 @RunWith(value= Parameterized.class)
-public class TestSetExclusion {
+public class TestRemoveExclusionPattern {
+
     private PreparedQueryCache cache;
     private boolean expected;
     private String input;
-    private String[] splittedInput;
-    private boolean isCached;
+    private int initialLenght;
 
     @Before
     public void setUp(){
         cache = new PreparedQueryCacheImpl();
 
-        PreparedQuery query1 = new PreparedQueryImpl("testId",   "testSql",null);
-        PreparedQuery query2 = new PreparedQueryImpl("testId2",   "testSql2",null);
+        PreparedQuery query = new PreparedQueryImpl("testId",   "testSql",null);
 
-        cache.cache(query1);
-        cache.cache(query2);
+        cache.cache(query);
 
         cache.endConfiguration();
-        try {
-            splittedInput = input.split("\\;");
-        }
-        catch(NullPointerException e){
-            //do nothing
-        }
+
+        cache.setExcludes("testId");
+        cache.setExcludes("otherId");
+        cache.setExcludes("otherOtherId");
+        initialLenght = cache.getExcludes().size();
+
     }
 
     @Parameters
     public static Collection<Object[]> getParameters(){
         return Arrays.asList(new Object[][]{
-                //expected      isCached,       input
-                {true,          false,          "test1;test2;test3"},
-                {true,          true,           "testId"},
-                {false,         false,          ""},
-                {false,         false,          null}
+                //expected      input
+                {true,          "testId"},
+                {false,         ""},
+                {false,         null},
+                {false,         "notInList"}
         });
     }
 
-    public TestSetExclusion(boolean expected, boolean isCached, String input){
+    public TestRemoveExclusionPattern(boolean expected, String input){
         this.input = input;
-        this.isCached = isCached;
         this.expected = expected;
     }
 
     @Test
-    public void testSetExcludes(){
+    public void testRemoveExclusion(){
 
-        cache.setExcludes(input);
+        try {
 
-        List<PreparedQueryCache.Exclusion> resultList = cache.getExcludes();
+            cache.removeExclusionPattern(input);
+            boolean result = cache.getExcludes().contains(input);
 
-        int resultLen = resultList.size();
-
-        if (resultLen == 0){
-            assertFalse(expected);
-        }
-        else{
-            if (splittedInput.length != resultLen)
-                //mi aspetto di non entrare mai in questo ramo
-                Assert.assertNotNull(null);
-
-            for(int i = 0; i < resultLen; i++){
-                Assert.assertEquals(splittedInput[i],resultList.get(i).getPattern());
-                if(isCached)
-                    Assert.assertFalse(cache.isCachable(splittedInput[i]));
-                else
-                    Assert.assertNull(cache.isCachable(splittedInput[i]));
-
+            if (expected) {
+                Assert.assertNotEquals(expected, result);
+                int finalLenght = cache.getExcludes().size();
+                Assert.assertEquals(initialLenght-1,finalLenght);
+            }
+            else {
+                Assert.assertEquals(expected, result);
+                int finalLenght = cache.getExcludes().size();
+                Assert.assertEquals(initialLenght,finalLenght);
             }
 
-            Assert.assertTrue(expected);
         }
+        catch(Exception e){
 
+            Assert.assertTrue(e instanceof NullPointerException);
+            Assert.assertFalse(expected);
+
+            int finalLenght = cache.getExcludes().size();
+            Assert.assertEquals(initialLenght,finalLenght);
+        }
     }
 
     @After

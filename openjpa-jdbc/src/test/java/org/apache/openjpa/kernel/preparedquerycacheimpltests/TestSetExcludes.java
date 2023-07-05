@@ -32,13 +32,17 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
+
+import static java.lang.System.out;
+import static org.junit.Assert.assertFalse;
 
 @RunWith(value= Parameterized.class)
-public class TestRemoveExclusion {
-
+public class TestSetExcludes {
     private PreparedQueryCache cache;
-    private int expected;
+    private boolean expected;
     private String input;
+    private int initialLen;
 
     @Before
     public void setUp(){
@@ -46,44 +50,66 @@ public class TestRemoveExclusion {
 
         PreparedQuery query1 = new PreparedQueryImpl("testId",   "testSql",null);
         PreparedQuery query2 = new PreparedQueryImpl("testId2",   "testSql2",null);
+        PreparedQuery query3 = new PreparedQueryImpl("testId3",   "testSql2",null);
+        PreparedQuery query4 = new PreparedQueryImpl("testId4",   "testSql2",null);
 
         cache.cache(query1);
         cache.cache(query2);
+        cache.cache(query3);
+        cache.cache(query4);
 
         cache.endConfiguration();
-        cache.setExcludes("testId");
-        cache.setExcludes("otherId");
+
+        initialLen = cache.getExcludes().size();
     }
 
     @Parameters
     public static Collection<Object[]> getParameters(){
         return Arrays.asList(new Object[][]{
                 //expected      input
-                {1,             "testId"},
-                {2,             ""},
-                {2,             null},
-                {1,             "otherId"}
+                {true,          "testId2;testId3;testId4"},
+                {true,          "testId;notInCache;test3"},
+                {true,          "testId"},
+                {true,          "notInCache"},
+                {true,          "testId;testId"},
+                {false,         ""},
+                {null,          null}
         });
     }
 
-    public TestRemoveExclusion(int expected, String input){
+    public TestSetExcludes(boolean expected,String input){
         this.input = input;
         this.expected = expected;
     }
 
     @Test
-    public void testRemoveExclusion(){
+    public void testSetExcludes(){
 
         try {
-            cache.removeExclusionPattern(input);
+            String[] rules;
+            cache.setExcludes(input);
+            if (input != null) {
+                rules = input.split(";");
+                int addedRules = 0;
+                for (String rule: rules){
+                    if (cache.isExcluded(rule) != null)
+                        addedRules++;
+                }
+                Assert.assertEquals(initialLen-addedRules,cache.getExcludes().size());
+            }
+            else{
+                Assert.assertNull(expected);
+                Assert.assertEquals(initialLen,cache.getExcludes().size());
+            }
         }
-        catch(Exception e){
+
+        catch (Exception e){
+            //questo branch è rimasto come dimostrazione che il valore di output atteso della
+            //stringa null iniziale era scorretto
+
             Assert.assertTrue(e instanceof NullPointerException);
+            Assert.assertEquals(input,null);
         }
-
-        int resultExclusions = cache.getExcludes().size();
-        Assert.assertEquals(expected,resultExclusions);
-
     }
 
     @After

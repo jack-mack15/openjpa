@@ -20,6 +20,7 @@
 package org.apache.openjpa.kernel.preparedquerycacheimpltests;
 
 import org.apache.openjpa.conf.OpenJPAConfiguration;
+import org.apache.openjpa.jdbc.kernel.JDBCFetchConfigurationImpl;
 import org.apache.openjpa.jdbc.kernel.PreparedQueryCacheImpl;
 import org.apache.openjpa.jdbc.kernel.PreparedQueryImpl;
 import org.apache.openjpa.kernel.*;
@@ -41,18 +42,16 @@ public class TestRegister {
     private PreparedQueryCache cache;
     private Object expected;
     private String id;
-    private QueryImpl query;
-    private FetchConfigurationImpl conf;
+    private Query query;
+    private FetchConfiguration conf;
 
     @Before
     public void setUp(){
         cache = new PreparedQueryCacheImpl();
 
-        PreparedQuery query1 = new PreparedQueryImpl("testId",   "testSql",null);
-        PreparedQuery query2 = new PreparedQueryImpl("testId2",   "testSql2",null);
+        PreparedQuery query = new PreparedQueryImpl("testId",   "testSql",null);
 
-        cache.cache(query1);
-        cache.cache(query2);
+        cache.cache(query);
 
         cache.endConfiguration();
 
@@ -64,59 +63,47 @@ public class TestRegister {
 
         BrokerImpl broker = new BrokerImpl();
         BrokerImpl spy = spy(broker);
-
+        OpenJPAConfiguration mockJpaConf = mock(OpenJPAConfiguration.class);
         FetchConfigurationImpl mockConf = mock(FetchConfigurationImpl.class);
+        StoreQuery mockedQuery = mock(StoreQuery.class);
 
         when(mockConf.clone()).thenReturn(new FetchConfigurationImpl());
-
-        OpenJPAConfiguration mockJpaConf = mock(OpenJPAConfiguration.class);
-
         when(mockJpaConf.getLog()).thenReturn(null);
         when(spy.getConfiguration()).thenReturn(mockJpaConf);
         when(spy.getFetchConfiguration()).thenReturn(mockConf);
 
-        StoreQuery mockedQuery = mock(StoreQuery.class);
+        Query query = new QueryImpl(spy,"testLanguage",mockedQuery);
+        Query delQuery = new DelegatingQuery(query);
 
-        QueryImpl query = new QueryImpl(spy,"testLanguage",mockedQuery);
+        FetchConfiguration jdbcConf = new JDBCFetchConfigurationImpl();
+        FetchConfigurationImpl fetchImpl = new FetchConfigurationImpl();
+        FetchConfigurationImpl fetchImpl2 = new FetchConfigurationImpl();
+        FetchConfiguration fetchDel = new DelegatingFetchConfiguration(fetchImpl);
 
-        FetchConfigurationImpl conf1 = new FetchConfigurationImpl();
-        conf1.setHint("openjpa.hint.IgnorePreparedQuery","true");
-        conf1.setHint("openjpa.hint.InvalidatePreparedQuery","true");
+        //fetchImpl.setHint("openjpa.hint.IgnorePreparedQuery","true");
+        //fetchImpl.setHint("openjpa.hint.InvalidatePreparedQuery","true");
 
-        FetchConfigurationImpl conf2 = new FetchConfigurationImpl();
-        conf2.setHint("openjpa.hint.IgnorePreparedQuery","test");
-        conf2.setHint("openjpa.hint.InvalidatePreparedQuery","test");
+        //fetchImpl2.setHint("openjpa.hint.IgnorePreparedQuery","test");
+        //fetchImpl2.setHint("openjpa.hint.InvalidatePreparedQuery","test");
 
         return Arrays.asList(new Object[][]{
-                //expected         id               query       FetchConf
-                {null,             "testId",        query,      null},
-                {true,             "otherId",       query,      null},
-                {true,             "",              query,      null},
-                {false,            null,            query,      null},
-                {false,            "testId",        null,       null},
-                {false,            "otherId",       null,       null},
-                {false,            "",              null,       null},
-                {false,            null,            null,       null},
-                {false,            "testId",        query,      conf1},
-                {false,            "otherId",       query,      conf1},
-                {false,            "",              query,      conf1},
-                {false,            null,            query,      conf1},
-                {false,            "testId",        null,       conf1},
-                {false,            "otherId",       null,       conf1},
-                {false,            "",              null,       conf1},
-                {false,            null,            null,       conf1},
-                {null,             "testId",        query,      conf2},
-                {true,             "otherId",       query,      conf2},
-                {true,             "",              query,      conf2},
-                {false,            null,            query,      conf2},
-                {false,            "testId",        null,       conf2},
-                {false,            "otherId",       null,       conf2},
-                {false,            "",              null,       conf2},
-                {false,            null,            null,       conf2}
+                //expected         id               query           FetchConf
+                {null,             "testId",        query,          null},
+                {true,             "notInCache",    query,          jdbcConf},
+                {true,             "",              query,          fetchImpl},
+                {false,            null,            query,          fetchDel},
+                {false,            "testId",        null,           fetchImpl},
+                {false,            "notInCache",    null,           jdbcConf},
+                {false,            "",              null,           fetchDel},
+                {false,            null,            null,           null},
+                {null,             "testId",        delQuery,       jdbcConf},
+                {true,             "notInCache",    delQuery,       fetchDel},
+                {true,             "",              delQuery,       fetchImpl},
+                {false,            null,            delQuery,       fetchImpl}
         });
     }
 
-    public TestRegister(Object expected, String id, QueryImpl query, FetchConfigurationImpl conf){
+    public TestRegister(Object expected, String id, Query query, FetchConfiguration conf){
         this.id = id;
         this.expected = expected;
         this.conf = conf;
