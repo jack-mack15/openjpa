@@ -63,6 +63,8 @@ public class MyJBDBCStoreManagerImpl extends JDBCStoreManager {
         when(mockedConf.getDataSource2(any())).thenReturn(mockedSource);
         Connection mockedConn = mock(Connection.class);
 
+        //il try and catch è stato inserito poichè getConnection potrebbe sollevare l'eccezione
+        //SQLException
         try {
             when(mockedSource.getConnection()).thenReturn(mockedConn);
         } catch (SQLException e) {

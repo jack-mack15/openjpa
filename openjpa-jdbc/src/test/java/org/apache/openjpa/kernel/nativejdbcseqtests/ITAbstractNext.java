@@ -31,6 +31,7 @@ import org.junit.Test;
 
 import java.sql.SQLException;
 
+import static java.lang.System.out;
 import static org.mockito.Mockito.*;
 
 public class ITAbstractNext {
@@ -62,7 +63,8 @@ public class ITAbstractNext {
 
         nativeJDBCSeq.setConfiguration(mockedConf);
 
-        nativeJDBCSeq.next(mockedCont,meta);
+        Object bho = nativeJDBCSeq.next(mockedCont,meta);
+        out.println(bho.toString());
 
         verify(mockedCont).getStoreManager();
         verify(mockedDel).getInnermostDelegate();

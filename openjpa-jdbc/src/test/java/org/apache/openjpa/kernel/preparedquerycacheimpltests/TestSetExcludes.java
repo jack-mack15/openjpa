@@ -73,7 +73,7 @@ public class TestSetExcludes {
                 {true,          "notInCache"},
                 {true,          "testId;testId"},
                 {false,         ""},
-                {null,          null}
+                {false,          null}
         });
     }
 
@@ -95,10 +95,10 @@ public class TestSetExcludes {
                     if (cache.isExcluded(rule) != null)
                         addedRules++;
                 }
-                Assert.assertEquals(initialLen-addedRules,cache.getExcludes().size());
+                Assert.assertEquals(addedRules,cache.getExcludes().size());
             }
             else{
-                Assert.assertNull(expected);
+                Assert.assertFalse(expected);
                 Assert.assertEquals(initialLen,cache.getExcludes().size());
             }
         }
