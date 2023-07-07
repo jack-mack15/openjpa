@@ -32,10 +32,7 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
 
-import static java.lang.System.out;
-import static org.junit.Assert.assertFalse;
 
 @RunWith(value= Parameterized.class)
 public class TestSetExcludes {

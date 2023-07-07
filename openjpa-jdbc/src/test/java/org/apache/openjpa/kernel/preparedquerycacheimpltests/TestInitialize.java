@@ -21,6 +21,7 @@ package org.apache.openjpa.kernel.preparedquerycacheimpltests;
 import org.apache.openjpa.jdbc.kernel.PreparedQueryCacheImpl;
 import org.apache.openjpa.jdbc.kernel.PreparedQueryImpl;
 import org.apache.openjpa.jdbc.kernel.SelectResultObjectProvider;
+import org.apache.openjpa.jdbc.sql.DBDictionary;
 import org.apache.openjpa.jdbc.sql.SQLBuffer;
 import org.apache.openjpa.jdbc.sql.SelectImpl;
 import org.apache.openjpa.kernel.*;
@@ -100,13 +101,15 @@ public class TestInitialize {
 
             Object[] objects = new Object[2];
 
+            DBDictionary mockedDict = mock(DBDictionary.class);
+
             //first element of objects
             SelectResultObjectProvider mockedProvider = mock(SelectResultObjectProvider.class);
             SelectImpl mockedSelectExecutor = mock(SelectImpl.class);
             when(mockedSelectExecutor.getStartIndex()).thenReturn((long) 0);
             when(mockedSelectExecutor.getEndIndex()).thenReturn(Long.MAX_VALUE);
             when(mockedSelectExecutor.hasMultipleSelects()).thenReturn(false);
-            SQLBuffer mockedBuffer = mock(SQLBuffer.class);
+            SQLBuffer mockedBuffer = new SQLBuffer(mockedDict);
             when(mockedSelectExecutor.getSQL()).thenReturn(mockedBuffer);
             when(mockedProvider.getSelect()).thenReturn(mockedSelectExecutor);
 

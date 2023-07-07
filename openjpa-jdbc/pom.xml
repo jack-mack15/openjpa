@@ -83,13 +83,42 @@
             <artifactId>jmock-junit4</artifactId>
             <scope>test</scope>
         </dependency>
+
+        <dependency>
+            <groupId>org.pitest</groupId>
+            <artifactId>pitest-maven</artifactId>
+            <version>1.4.2</version>
+        </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-inline</artifactId>
             <version>3.12.4</version>
             <scope>test</scope>
         </dependency>
+
     </dependencies>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.pitest</groupId>
+                <artifactId>pitest-maven</artifactId>
+                <version>1.4.2</version>
+                <configuration>
+                    <verbose>false</verbose>
+                    <threads>8</threads>
+                    <targetClasses>
+                        <param>org.apache.openjpa.jdbc.kernel.NativeJDBCSeq</param>
+                        <param>org.apache.openjpa.jdbc.kernel.PreparedQueryCacheImpl</param>
+                    </targetClasses>
+                    <targetTests>
+                        <param>org.apache.openjpa.kernel.*</param>
+                    </targetTests>
+                </configuration>
+            </plugin>
+
+        </plugins>
+    </build>
+
     <profiles>
         <profile>
             <id>badua-profile</id>
@@ -97,17 +126,40 @@
                 <activeByDefault>false</activeByDefault>
             </activation>
             <properties>
-                <ba-dua.version>0.6.0</ba-dua.version>
+                <badua.version>0.6.0</badua.version>
             </properties>
             <dependencies>
                 <dependency>
                     <groupId>br.usp.each.saeg</groupId>
                     <artifactId>ba-dua-cli</artifactId>
-                    <version>0.6.0</version>
+                    <version>${badua.version}</version>
                 </dependency>
             </dependencies>
             <build>
                 <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-dependency-plugin</artifactId>
+                        <version>2.10</version>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>copy</goal>
+                                </goals>
+                                <configuration>
+                                    <artifactItems>
+                                        <artifactItem>
+                                            <groupId>br.usp.each.saeg</groupId>
+                                            <artifactId>ba-dua-agent-rt</artifactId>
+                                            <classifier>all</classifier>
+                                            <version>${badua.version}</version>
+                                        </artifactItem>
+                                    </artifactItems>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
@@ -115,8 +167,7 @@
                         <configuration>
                             <argLine>
                                 -javaagent:${project.basedir}/badua-lib/ba-dua-agent-rt-0.6.0-all.jar
-                                -Doutput.file=${project.build.directory}/badua.ser
-                            </argLine>
+                                -Xbootclasspath/p:${project.basedir}/badua-lib/ba-dua-agent-rt-0.6.0-all.jar</argLine>
                             <redirectTestOutputToFile>true</redirectTestOutputToFile>
                             <trimStackTrace>false</trimStackTrace>
                             <useSystemClassLoader>true</useSystemClassLoader>
@@ -181,6 +232,7 @@
                             </systemProperties>
                         </configuration>
                     </plugin>
+
                     <plugin>
                         <groupId>org.codehaus.mojo</groupId>
                         <artifactId>exec-maven-plugin</artifactId>
@@ -202,6 +254,7 @@
                             </execution>
                         </executions>
                     </plugin>
+
                 </plugins>
             </build>
         </profile>
