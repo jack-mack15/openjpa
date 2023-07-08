@@ -19,10 +19,13 @@
 
 package org.apache.openjpa.kernel.preparedquerycacheimpltests;
 
+import org.apache.openjpa.conf.OpenJPAConfiguration;
 import org.apache.openjpa.jdbc.kernel.PreparedQueryCacheImpl;
 import org.apache.openjpa.jdbc.kernel.PreparedQueryImpl;
 import org.apache.openjpa.kernel.PreparedQuery;
 import org.apache.openjpa.kernel.PreparedQueryCache;
+import org.apache.openjpa.lib.conf.ConfigurationImpl;
+import org.apache.openjpa.lib.log.LogFactoryImpl;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -34,6 +37,8 @@ import java.util.Arrays;
 import java.util.Collection;
 
 import static java.lang.System.out;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @RunWith(value= Parameterized.class)
 public class TestRemoveExclusionPattern {
@@ -42,6 +47,7 @@ public class TestRemoveExclusionPattern {
     private boolean expected;
     private String input;
     private int initialLenght;
+    private boolean forCov;
 
     @Before
     public void setUp(){
@@ -63,22 +69,32 @@ public class TestRemoveExclusionPattern {
     @Parameters
     public static Collection<Object[]> getParameters(){
         return Arrays.asList(new Object[][]{
-                //expected      input
-                {true,          "testId"},
-                {false,         ""},
-                {false,         null},
-                {false,         "notInList"}
+                //expected      forCov,     input
+                {true,          true,       "testId"},
+                {true,          false,      "testId"},
+                {false,         false,      ""},
+                {false,         false,      null},
+                {false,         false,      "notInList"}
         });
     }
 
-    public TestRemoveExclusionPattern(boolean expected, String input){
+    public TestRemoveExclusionPattern(boolean expected, boolean forCov,String input){
         this.input = input;
         this.expected = expected;
+        this.forCov = forCov;
     }
 
     @Test
     public void testRemoveExclusion(){
-
+        if(forCov){
+            //per aumentare coverage
+            ConfigurationImpl mockedConf = mock(ConfigurationImpl.class);
+            LogFactoryImpl logFactory = new LogFactoryImpl();
+            LogFactoryImpl.LogImpl log = (LogFactoryImpl.LogImpl) logFactory.getLog("test");
+            log.setLevel((short) 0);
+            when(mockedConf.getLog(OpenJPAConfiguration.LOG_RUNTIME)).thenReturn(log);
+            cache.setConfiguration(mockedConf);
+        }
         try {
 
             cache.removeExclusionPattern(input);

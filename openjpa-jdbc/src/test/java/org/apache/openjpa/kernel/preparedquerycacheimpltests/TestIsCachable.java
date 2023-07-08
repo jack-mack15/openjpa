@@ -47,10 +47,6 @@ public class TestIsCachable {
 
         PreparedQuery query1 = new PreparedQueryImpl("valid",   "testSql",null);
 
-        //per aumentare coverage
-        //PreparedQuery query2 = new PreparedQueryImpl("test",   "testSql",null);
-        //cache.cache(query2);
-
         cache.cache(query1);
 
         cache.markUncachable("uncachable",null);

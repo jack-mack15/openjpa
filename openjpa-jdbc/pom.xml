@@ -111,7 +111,7 @@
                         <param>org.apache.openjpa.jdbc.kernel.PreparedQueryCacheImpl</param>
                     </targetClasses>
                     <targetTests>
-                        <param>org.apache.openjpa.kernel.*</param>
+                        <param>org.apache.openjpa.kernel.preparedquerycacheimpltests.*</param>
                     </targetTests>
                 </configuration>
             </plugin>

@@ -58,11 +58,13 @@ public class TestMarkUncachable {
 
         cache.endConfiguration();
 
-        //per aumentare coverage
-        //cache.setEnableStatistics(true);
 
         cache.setConfiguration(new JDBCConfigurationImpl());
 
+        //per aumentare coverage
+        cache.setEnableStatistics(true);
+        PreparedQueryCache.Exclusion strongExcl = new PreparedQueryCacheImpl.StrongExclusion("pattern","reason");
+        cache.markUncachable("notInCache",strongExcl);
     }
 
     @Parameters
@@ -91,7 +93,7 @@ public class TestMarkUncachable {
                 {false,         null,           null},
 
                 //per aumentare coverage
-                //{false,     "notInCache",     null}
+                {false,     "notInCache",     weakExcl}
         });
     }
 

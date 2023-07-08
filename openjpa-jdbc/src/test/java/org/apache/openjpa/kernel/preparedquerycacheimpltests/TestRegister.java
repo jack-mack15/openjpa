@@ -24,6 +24,8 @@ import org.apache.openjpa.jdbc.kernel.JDBCFetchConfigurationImpl;
 import org.apache.openjpa.jdbc.kernel.PreparedQueryCacheImpl;
 import org.apache.openjpa.jdbc.kernel.PreparedQueryImpl;
 import org.apache.openjpa.kernel.*;
+import org.apache.openjpa.lib.conf.ConfigurationImpl;
+import org.apache.openjpa.lib.log.LogFactoryImpl;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -80,11 +82,13 @@ public class TestRegister {
         FetchConfigurationImpl fetchImpl2 = new FetchConfigurationImpl();
         FetchConfiguration fetchDel = new DelegatingFetchConfiguration(fetchImpl);
 
-        //fetchImpl.setHint("openjpa.hint.IgnorePreparedQuery","true");
-        //fetchImpl.setHint("openjpa.hint.InvalidatePreparedQuery","true");
+        //per aumentare coverage
+        FetchConfigurationImpl fetchImpl3 = new FetchConfigurationImpl();
+        fetchImpl2.setHint("openjpa.hint.IgnorePreparedQuery","true");
+        fetchImpl3.setHint("openjpa.hint.InvalidatePreparedQuery","true");
+        Query lateQuery1 = new QueryImpl(spy,"openjpa.SQL",mockedQuery);
+        Query lateQuery2 = new QueryImpl(spy,"openjpa.MethodQL",mockedQuery);
 
-        //fetchImpl2.setHint("openjpa.hint.IgnorePreparedQuery","test");
-        //fetchImpl2.setHint("openjpa.hint.InvalidatePreparedQuery","test");
 
         return Arrays.asList(new Object[][]{
                 //expected         id               query           FetchConf
@@ -99,7 +103,13 @@ public class TestRegister {
                 {null,             "testId",        delQuery,       jdbcConf},
                 {true,             "notInCache",    delQuery,       fetchDel},
                 {true,             "",              delQuery,       fetchImpl},
-                {false,            null,            delQuery,       fetchImpl}
+                {false,            null,            delQuery,       fetchImpl},
+
+                //per aumentare coverage
+                {false,            "testid",        query,          fetchImpl2},
+                {false,            "testid",        query,          fetchImpl3},
+                {false,            "testid",        lateQuery1,     fetchImpl3},
+                {false,            "testid",        lateQuery2,     fetchImpl3}
         });
     }
 

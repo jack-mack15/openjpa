@@ -19,9 +19,14 @@
 
 package org.apache.openjpa.kernel.preparedquerycacheimpltests;
 
+import org.apache.openjpa.conf.OpenJPAConfiguration;
 import org.apache.openjpa.jdbc.kernel.PreparedQueryCacheImpl;
 import org.apache.openjpa.jdbc.kernel.PreparedQueryImpl;
 import org.apache.openjpa.kernel.*;
+import org.apache.openjpa.lib.conf.ConfigurationImpl;
+import org.apache.openjpa.lib.log.Log;
+import org.apache.openjpa.lib.log.LogFactoryImpl;
+import org.hsqldb.server.ServerConfiguration;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -30,6 +35,10 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import java.util.Arrays;
 import java.util.Collection;
+
+import static java.lang.System.out;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @RunWith(value= Parameterized.class)
 public class TestCache {
@@ -44,6 +53,16 @@ public class TestCache {
         cache = new PreparedQueryCacheImpl();
         cache.markUncachable("unCache",null);
         cache.setExcludes("excluded");
+
+        //per aumentare il coverage
+        PreparedQueryImpl alreadyCached = new PreparedQueryImpl("cached","testSql",null);
+        cache.cache(alreadyCached);
+        ConfigurationImpl mockedConf = mock(ConfigurationImpl.class);
+        LogFactoryImpl logFactory = new LogFactoryImpl();
+        LogFactoryImpl.LogImpl log = (LogFactoryImpl.LogImpl) logFactory.getLog("test");
+        log.setLevel((short) 0);
+        when(mockedConf.getLog(OpenJPAConfiguration.LOG_RUNTIME)).thenReturn(log);
+        cache.setConfiguration(mockedConf);
     }
 
     @Parameters
@@ -53,12 +72,19 @@ public class TestCache {
         PreparedQueryImpl uncachable = new PreparedQueryImpl("unCache","testSql",null);
         PreparedQueryImpl excluded = new PreparedQueryImpl("excluded","testSql",null);
 
+        //per aumentarea coverage
+        PreparedQueryImpl alreadyCached = new PreparedQueryImpl("cached","testSql",null);
+
+
         return Arrays.asList(new Object[][]{
                 //first     second      query
-                {true,      true,      valid},
+                {true,      true,       valid},
                 {false,     false,      uncachable},
                 {false,     false,      excluded},
-                {false,     false,      null}
+                {false,     false,      null},
+
+                //per aumentare coverage
+                {false,     true,      alreadyCached}
         });
     }
 
