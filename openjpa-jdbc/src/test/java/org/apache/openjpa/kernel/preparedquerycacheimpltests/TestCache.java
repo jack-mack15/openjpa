@@ -37,6 +37,7 @@ import java.util.Arrays;
 import java.util.Collection;
 
 import static java.lang.System.out;
+import static org.junit.Assert.assertFalse;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -113,8 +114,9 @@ public class TestCache {
         }
         catch (Exception e){
             Assert.assertTrue(e instanceof NullPointerException);
-            Assert.assertFalse(firstExpected);
+            assertFalse(firstExpected);
         }
+
     }
 
 }

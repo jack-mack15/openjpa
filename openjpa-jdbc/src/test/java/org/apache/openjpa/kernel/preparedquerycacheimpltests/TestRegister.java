@@ -57,6 +57,9 @@ public class TestRegister {
 
         cache.endConfiguration();
 
+        //per pit
+        cache.markUncachable("uncachable",null);
+
     }
 
 
@@ -109,7 +112,9 @@ public class TestRegister {
                 {false,            "testid",        query,          fetchImpl2},
                 {false,            "testid",        query,          fetchImpl3},
                 {false,            "testid",        lateQuery1,     fetchImpl3},
-                {false,            "testid",        lateQuery2,     fetchImpl3}
+                {false,            "testid",        lateQuery2,     fetchImpl3},
+                //per pit
+                {false,            "uncachable",    query,          fetchImpl}
         });
     }
 

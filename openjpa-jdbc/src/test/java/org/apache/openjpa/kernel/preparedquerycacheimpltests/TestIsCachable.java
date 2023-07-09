@@ -83,6 +83,7 @@ public class TestIsCachable {
         }
         catch(Exception e){
             assertTrue(e instanceof NullPointerException);
+            assertFalse(expected);
         }
     }
 
